@@ -34,9 +34,9 @@ app.use(express.json());
 
 app.use((req: Request, res: Response, next: NextFunction) => {
   res.setHeader('Access-Control-Allow-Origin', ACCESS_ORIGIN);
-
   res.setHeader('Access-Control-Allow-Methods', 'OPTIONS, POST');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
   if (req.method === 'OPTIONS') res.sendStatus(204);
   else next();
 });
@@ -49,9 +49,7 @@ app.post(
       const errors: Result<ValidationError> = validationResult(req);
       const accessToken: GetAccessTokenResponse = await client.getAccessToken();
 
-      const email: string = req.body['email'];
-      const name: string = req.body['name'];
-      const message: string = req.body['message'];
+      const { email, name, message } = req.body;
 
       if (!errors.isEmpty()) throw handleReqError(errors);
 
