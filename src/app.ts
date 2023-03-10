@@ -1,5 +1,4 @@
-import { NextFunction } from 'connect';
-import express, { Application, Request, Response } from 'express';
+import express, { Application, NextFunction, Request, Response } from 'express';
 import { Result, ValidationError, validationResult } from 'express-validator';
 import { OAuth2Client } from 'google-auth-library';
 import { GetAccessTokenResponse } from 'google-auth-library/build/src/auth/oauth2client';
