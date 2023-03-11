@@ -20,7 +20,6 @@ const CLIENT_ID = process.env.CLIENT_ID;
 const CLIENT_SECRET = process.env.CLIENT_SECRET;
 const REDIRECT_URI = process.env.REDIRECT_URI;
 const REFRESH_TOKEN = process.env.REFRESH_TOKEN;
-const worker = new Worker(path.join(__dirname, 'worker.js'));
 
 const client: OAuth2Client = new OAuth2Client(
   CLIENT_ID,
@@ -48,13 +47,13 @@ app.post(
     try {
       const errors: Result<ValidationError> = validationResult(req);
       const accessToken: GetAccessTokenResponse = await client.getAccessToken();
+      const worker = new Worker(path.join(__dirname, 'worker.js'));
 
       if (!errors.isEmpty()) throw handleReqError(errors);
 
-      worker.on('message', (msg) => {
+      worker.once('message', (msg) => {
         console.log(`Worker message received: ${msg}`);
-        // res.send(`Worker message received: ${msg}`);
-        res.status(201).send({ message: 'SUCCESS' });
+        res.status(201).send({ message: msg });
       });
 
       worker.postMessage({

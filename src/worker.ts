@@ -1,6 +1,6 @@
-import { generateHTML } from './middleware/mail';
-import { parentPort, workerData } from 'worker_threads';
 import nodemailer from 'nodemailer';
+import { parentPort } from 'worker_threads';
+import { generateHTML } from './middleware/mail';
 
 parentPort?.on('message', async (data) => {
   const {
