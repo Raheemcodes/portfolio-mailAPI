@@ -47,7 +47,7 @@ app.post(
     try {
       const errors: Result<ValidationError> = validationResult(req);
       const accessToken: GetAccessTokenResponse = await client.getAccessToken();
-      const start: number = Date.now();
+
       const { email, name, message } = req.body;
 
       if (!errors.isEmpty()) throw handleReqError(errors);
@@ -71,8 +71,6 @@ app.post(
         generateTextFromHTML: true,
         html: generateHTML(email, name, message),
       });
-
-      console.log('timer: ', Date.now() - start);
 
       res.status(201).send({ message: 'SUCCESS' });
     } catch (err) {
