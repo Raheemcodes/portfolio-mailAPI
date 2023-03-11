@@ -3,10 +3,10 @@ import { Result, ValidationError, validationResult } from 'express-validator';
 import { OAuth2Client } from 'google-auth-library';
 import { GetAccessTokenResponse } from 'google-auth-library/build/src/auth/oauth2client';
 import helmet from 'helmet';
-import path from 'path';
-import { Worker } from 'worker_threads';
+import nodemailer from 'nodemailer';
 import {
   CustomError,
+  generateHTML,
   handleReqError,
   validateRequest,
 } from './middleware/mail';
@@ -47,24 +47,34 @@ app.post(
     try {
       const errors: Result<ValidationError> = validationResult(req);
       const accessToken: GetAccessTokenResponse = await client.getAccessToken();
-      const worker = new Worker(path.join(__dirname, 'worker.js'));
+      const start: number = Date.now();
+      const { email, name, message } = req.body;
 
       if (!errors.isEmpty()) throw handleReqError(errors);
 
-      worker.once('message', (msg) => {
-        console.log(`Worker message received: ${msg}`);
-        res.status(201).send({ message: msg });
+      const transport: any = nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+          type: 'OAuth2',
+          user: NODEMAIL_GMAIL,
+          clientId: CLIENT_ID,
+          clientSecret: CLIENT_SECRET,
+          refreshToken: REFRESH_TOKEN,
+          accessToken: accessToken as string,
+        },
       });
 
-      worker.postMessage({
-        ...req.body,
-        EMAIL,
-        CLIENT_ID,
-        CLIENT_SECRET,
-        stringifiedAccess: JSON.stringify(accessToken),
-        REFRESH_TOKEN,
-        NODEMAIL_GMAIL,
+      await transport.sendMail({
+        from: NODEMAIL_GMAIL,
+        to: EMAIL,
+        subject: 'Message From Your Portfolio',
+        generateTextFromHTML: true,
+        html: generateHTML(email, name, message),
       });
+
+      console.log('timer: ', Date.now() - start);
+
+      res.status(201).send({ message: 'SUCCESS' });
     } catch (err) {
       next(err);
     }
