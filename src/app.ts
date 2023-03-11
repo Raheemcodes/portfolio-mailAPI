@@ -54,7 +54,7 @@ app.post(
 
       worker.once('message', (msg) => {
         console.log(`Worker message received: ${msg}`);
-        console.log('time: ', Date.now() - start);
+        // console.log('time: ', Date.now() - start);
         res.status(201).send({ message: msg });
       });
 
