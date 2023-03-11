@@ -3,10 +3,10 @@ import { Result, ValidationError, validationResult } from 'express-validator';
 import { OAuth2Client } from 'google-auth-library';
 import { GetAccessTokenResponse } from 'google-auth-library/build/src/auth/oauth2client';
 import helmet from 'helmet';
-import nodemailer from 'nodemailer';
+import path from 'path';
+import { Worker } from 'worker_threads';
 import {
   CustomError,
-  generateHTML,
   handleReqError,
   validateRequest,
 } from './middleware/mail';
@@ -20,6 +20,7 @@ const CLIENT_ID = process.env.CLIENT_ID;
 const CLIENT_SECRET = process.env.CLIENT_SECRET;
 const REDIRECT_URI = process.env.REDIRECT_URI;
 const REFRESH_TOKEN = process.env.REFRESH_TOKEN;
+const worker = new Worker(path.join(__dirname, 'worker.js'));
 
 const client: OAuth2Client = new OAuth2Client(
   CLIENT_ID,
@@ -48,33 +49,24 @@ app.post(
       const errors: Result<ValidationError> = validationResult(req);
       const accessToken: GetAccessTokenResponse = await client.getAccessToken();
       const start: number = Date.now();
-      const { email, name, message } = req.body;
 
       if (!errors.isEmpty()) throw handleReqError(errors);
 
-      const transport: any = nodemailer.createTransport({
-        service: 'gmail',
-        auth: {
-          type: 'OAuth2',
-          user: NODEMAIL_GMAIL,
-          clientId: CLIENT_ID,
-          clientSecret: CLIENT_SECRET,
-          refreshToken: REFRESH_TOKEN,
-          accessToken: accessToken as string,
-        },
+      worker.once('message', (msg) => {
+        console.log(`Worker message received: ${msg}`);
+        console.log('time: ', Date.now() - start);
+        res.status(201).send({ message: msg });
       });
 
-      await transport.sendMail({
-        from: NODEMAIL_GMAIL,
-        to: EMAIL,
-        subject: 'Message From Your Portfolio',
-        generateTextFromHTML: true,
-        html: generateHTML(email, name, message),
+      worker.postMessage({
+        ...req.body,
+        EMAIL,
+        CLIENT_ID,
+        CLIENT_SECRET,
+        stringifiedAccess: JSON.stringify(accessToken),
+        REFRESH_TOKEN,
+        NODEMAIL_GMAIL,
       });
-
-      console.log('timer: ', Date.now() - start);
-
-      res.status(201).send({ message: 'SUCCESS' });
     } catch (err) {
       next(err);
     }
