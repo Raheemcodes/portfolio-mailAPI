@@ -1,4 +1,4 @@
-import sgmail from '@sendgrid/mail';
+import sgMail from '@sendgrid/mail';
 import express, { Application, NextFunction, Request, Response } from 'express';
 import { Result, ValidationError, validationResult } from 'express-validator';
 
@@ -13,15 +13,15 @@ import {
 
 const app: Application = express();
 const PORT = process.env.PORT || 3000;
-const ACCESS_ORIGIN = <string>process.env.ACCESS_ORIGIN;
-const NODEMAIL_GMAIL = process.env.NODEMAIL_GMAIL;
-const EMAIL = process.env.EMAIL;
+const { ACCESS_ORIGIN, NODEMAIL_GMAIL, EMAIL, SENDGRID_API_KEY } = process.env;
+
+sgMail.setApiKey(SENDGRID_API_KEY!);
 
 app.use(helmet());
 app.use(express.json());
 
 app.use((req: Request, res: Response, next: NextFunction) => {
-  res.setHeader('Access-Control-Allow-Origin', ACCESS_ORIGIN);
+  res.setHeader('Access-Control-Allow-Origin', ACCESS_ORIGIN!);
   res.setHeader('Access-Control-Allow-Methods', 'OPTIONS, POST');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
@@ -42,12 +42,15 @@ app.post(
 
       res.status(201).send({ message: 'SUCCESS' });
 
-      sgmail.send({
+      const response = await sgMail.send({
         to: EMAIL,
-        from: <string>NODEMAIL_GMAIL,
+        from: NODEMAIL_GMAIL!,
         subject: 'Message From Your Portfolio',
         html: generateHTML(email, name, message),
       });
+
+      console.log(response[0].statusCode);
+      console.log(response[0].headers);
     } catch (err) {
       next(err);
     }
@@ -55,8 +58,8 @@ app.post(
 );
 
 app.use((error: any, req: Request, res: Response) => {
-  console.log(error);
   const { message, statusCode = 500, data }: CustomError = error;
+  console.log(message, data);
 
   res.status(statusCode).json({ message, data });
 });
