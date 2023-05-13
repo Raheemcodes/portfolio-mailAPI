@@ -1,9 +1,9 @@
+import sgmail from '@sendgrid/mail';
 import express, { Application, NextFunction, Request, Response } from 'express';
 import { Result, ValidationError, validationResult } from 'express-validator';
-import { OAuth2Client } from 'google-auth-library';
-import { GetAccessTokenResponse } from 'google-auth-library/build/src/auth/oauth2client';
+
 import helmet from 'helmet';
-import nodemailer from 'nodemailer';
+
 import {
   CustomError,
   generateHTML,
@@ -16,17 +16,6 @@ const PORT = process.env.PORT || 3000;
 const ACCESS_ORIGIN = <string>process.env.ACCESS_ORIGIN;
 const NODEMAIL_GMAIL = process.env.NODEMAIL_GMAIL;
 const EMAIL = process.env.EMAIL;
-const CLIENT_ID = process.env.CLIENT_ID;
-const CLIENT_SECRET = process.env.CLIENT_SECRET;
-const REDIRECT_URI = process.env.REDIRECT_URI;
-const REFRESH_TOKEN = process.env.REFRESH_TOKEN;
-
-const client: OAuth2Client = new OAuth2Client(
-  CLIENT_ID,
-  CLIENT_SECRET,
-  REDIRECT_URI
-);
-client.setCredentials({ refresh_token: REFRESH_TOKEN });
 
 app.use(helmet());
 app.use(express.json());
@@ -46,33 +35,19 @@ app.post(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const errors: Result<ValidationError> = validationResult(req);
-      const accessToken: GetAccessTokenResponse = await client.getAccessToken();
 
       const { email, name, message } = req.body;
 
       if (!errors.isEmpty()) throw handleReqError(errors);
 
-      const transport: any = nodemailer.createTransport({
-        service: 'gmail',
-        auth: {
-          type: 'OAuth2',
-          user: NODEMAIL_GMAIL,
-          clientId: CLIENT_ID,
-          clientSecret: CLIENT_SECRET,
-          refreshToken: REFRESH_TOKEN,
-          accessToken: accessToken as string,
-        },
-      });
+      res.status(201).send({ message: 'SUCCESS' });
 
-      await transport.sendMail({
-        from: NODEMAIL_GMAIL,
+      sgmail.send({
         to: EMAIL,
+        from: <string>NODEMAIL_GMAIL,
         subject: 'Message From Your Portfolio',
-        generateTextFromHTML: true,
         html: generateHTML(email, name, message),
       });
-
-      res.status(201).send({ message: 'SUCCESS' });
     } catch (err) {
       next(err);
     }
