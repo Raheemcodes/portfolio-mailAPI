@@ -49,8 +49,7 @@ app.post(
         html: generateHTML(email, name, message),
       });
 
-      console.log(response[0].statusCode);
-      console.log(response[0].headers);
+      console.log('email sent successfully!');
     } catch (err) {
       next(err);
     }
