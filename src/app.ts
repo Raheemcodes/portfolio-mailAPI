@@ -7,12 +7,14 @@ import helmet from 'helmet';
 import nodemailer from 'nodemailer';
 import {
   CustomError,
+  RefreshToken_,
   generateHTML,
   handleReqError,
   validateRequest,
 } from './middleware/mail';
+import fs from 'fs';
+import path from 'path';
 
-const app: Application = express();
 const {
   PORT,
   ACCESS_ORIGIN,
@@ -24,12 +26,26 @@ const {
   GMAIL_SCOPES,
 } = process.env;
 
+const app: Application = express();
+
 const client: OAuth2Client = new OAuth2Client(
   CLIENT_ID,
   CLIENT_SECRET,
   REDIRECT_URI
 );
 let REFRESH_TOKEN: string;
+
+fs.readFile(
+  path.join(process.cwd(), 'data', 'token.json'),
+  (err, data: any) => {
+    if (err) console.log('no token');
+    else {
+      const { refreshToken }: RefreshToken_ = JSON.parse(data);
+      REFRESH_TOKEN = refreshToken;
+      console.log('Token fetched :)');
+    }
+  }
+);
 
 app.use(helmet());
 app.use(express.json());
@@ -59,10 +75,17 @@ app.use('/oauthcallback', async (req: Request, res: Response) => {
   try {
     const { code } = req.query;
     const { tokens } = await client.getToken(code as string);
-
-    client.setCredentials(tokens);
     REFRESH_TOKEN = tokens.refresh_token!;
-    console.log(`<h1>Refresh Token Set :)</h1>`);
+    const data = JSON.stringify({ refreshToken: REFRESH_TOKEN });
+
+    fs.writeFile(
+      path.join(process.cwd(), 'data', 'token.json'),
+      data,
+      (err) => {
+        if (err) throw err;
+        console.log('Token stored :)');
+      }
+    );
   } catch (err) {
     console.log(err);
   }
@@ -73,8 +96,8 @@ app.post(
   validateRequest,
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      console.log(REFRESH_TOKEN);
       const errors: Result<ValidationError> = validationResult(req);
+      client.setCredentials({ refresh_token: REFRESH_TOKEN });
       const { token }: GetAccessTokenResponse = await client.getAccessToken();
 
       const { email, name, message } = req.body;

@@ -12,6 +12,10 @@ export interface CustomError {
   data?: any;
 }
 
+export interface RefreshToken_ {
+  refreshToken: string;
+}
+
 // validation
 export const validateRequest: ValidationChain[] = [
   body('email', 'INVALID_EMAIL').trim().isEmail(),
