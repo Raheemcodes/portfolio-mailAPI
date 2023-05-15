@@ -1,9 +1,10 @@
-import sgMail from '@sendgrid/mail';
-import express, { Application, NextFunction, Request, Response } from 'express';
+import { NextFunction } from 'connect';
+import express, { Application, Request, Response } from 'express';
 import { Result, ValidationError, validationResult } from 'express-validator';
-
+import { OAuth2Client } from 'google-auth-library';
+import { GetAccessTokenResponse } from 'google-auth-library/build/src/auth/oauth2client';
 import helmet from 'helmet';
-
+import nodemailer from 'nodemailer';
 import {
   CustomError,
   generateHTML,
@@ -12,10 +13,23 @@ import {
 } from './middleware/mail';
 
 const app: Application = express();
-const PORT = process.env.PORT || 3000;
-const { ACCESS_ORIGIN, NODEMAIL_GMAIL, EMAIL, SENDGRID_API_KEY } = process.env;
+const {
+  PORT,
+  ACCESS_ORIGIN,
+  NODEMAIL_GMAIL,
+  EMAIL,
+  CLIENT_ID,
+  CLIENT_SECRET,
+  REDIRECT_URI,
+  GMAIL_SCOPES,
+} = process.env;
 
-sgMail.setApiKey(SENDGRID_API_KEY!);
+const client: OAuth2Client = new OAuth2Client(
+  CLIENT_ID,
+  CLIENT_SECRET,
+  REDIRECT_URI
+);
+let REFRESH_TOKEN: string;
 
 app.use(helmet());
 app.use(express.json());
@@ -29,27 +43,67 @@ app.use((req: Request, res: Response, next: NextFunction) => {
   else next();
 });
 
+app.set('view engine', 'html');
+
+app.use('/generate-authcode', (req: Request, res: Response) => {
+  const url = client.generateAuthUrl({
+    access_type: 'offline',
+    prompt: 'consent',
+    scope: [GMAIL_SCOPES!],
+  });
+
+  res.redirect(url);
+});
+
+app.use('/oauthcallback', async (req: Request, res: Response) => {
+  try {
+    const { code } = req.query;
+    const { tokens } = await client.getToken(code as string);
+
+    client.setCredentials(tokens);
+    REFRESH_TOKEN = tokens.refresh_token!;
+    console.log(`<h1>Refresh Token Set :)</h1>`);
+  } catch (err) {
+    console.log(err);
+  }
+});
+
 app.post(
   '/mail-api',
   validateRequest,
   async (req: Request, res: Response, next: NextFunction) => {
     try {
+      console.log(REFRESH_TOKEN);
       const errors: Result<ValidationError> = validationResult(req);
+      const { token }: GetAccessTokenResponse = await client.getAccessToken();
 
       const { email, name, message } = req.body;
 
       if (!errors.isEmpty()) throw handleReqError(errors);
 
-      res.status(201).send({ message: 'SUCCESS' });
+      const transport: any = nodemailer.createTransport({
+        host: 'smtp.gmail.com',
+        port: 465,
+        secure: true,
+        auth: {
+          type: 'OAuth2',
+          user: NODEMAIL_GMAIL,
+          clientId: CLIENT_ID,
+          clientSecret: CLIENT_SECRET,
+          refreshToken: REFRESH_TOKEN,
+          accessToken: token!,
+        },
+      });
 
-      const response = await sgMail.send({
+      await transport.sendMail({
+        from: NODEMAIL_GMAIL,
         to: EMAIL,
-        from: NODEMAIL_GMAIL!,
         subject: 'Message From Your Portfolio',
+        generateTextFromHTML: true,
         html: generateHTML(email, name, message),
       });
 
-      console.log('email sent successfully!');
+      res.status(201).send({ message: 'SUCCESS' });
     } catch (err) {
       next(err);
     }
@@ -57,12 +111,12 @@ app.post(
 );
 
 app.use((error: any, req: Request, res: Response) => {
+  console.log(error);
   const { message, statusCode = 500, data }: CustomError = error;
-  console.log(message, data);
 
   res.status(statusCode).json({ message, data });
 });
 
-app.listen(PORT, () => {
+app.listen(PORT || 3000, () => {
   console.log(`Server running at port: ${PORT}`);
 });
