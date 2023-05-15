@@ -43,7 +43,6 @@ fs.readFile(
     else {
       const { encryptedData }: RefreshToken_ = JSON.parse(data);
       REFRESH_TOKEN = decrypt(encryptedData.encryptedToken, encryptedData.iv);
-      console.log(REFRESH_TOKEN);
       console.log('Token fetched :)');
     }
   }
