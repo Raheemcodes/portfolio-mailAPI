@@ -14,6 +14,7 @@ import {
 } from './middleware/mail';
 import fs from 'fs';
 import path from 'path';
+import { decrypt, encrypt } from './helpers/encrypt.helper';
 
 const {
   PORT,
@@ -40,8 +41,9 @@ fs.readFile(
   (err, data: any) => {
     if (err) console.log('no token');
     else {
-      const { refreshToken }: RefreshToken_ = JSON.parse(data);
-      REFRESH_TOKEN = refreshToken;
+      const { encryptedData }: RefreshToken_ = JSON.parse(data);
+      REFRESH_TOKEN = decrypt(encryptedData.encryptedToken, encryptedData.iv);
+      console.log(REFRESH_TOKEN);
       console.log('Token fetched :)');
     }
   }
@@ -76,7 +78,7 @@ app.use('/oauthcallback', async (req: Request, res: Response) => {
     const { code } = req.query;
     const { tokens } = await client.getToken(code as string);
     REFRESH_TOKEN = tokens.refresh_token!;
-    const data = JSON.stringify({ refreshToken: REFRESH_TOKEN });
+    const data = JSON.stringify({ encryptedData: encrypt(REFRESH_TOKEN) });
 
     fs.writeFile(
       path.join(process.cwd(), 'data', 'token.json'),

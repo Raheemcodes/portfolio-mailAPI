@@ -12,8 +12,13 @@ export interface CustomError {
   data?: any;
 }
 
+export interface EncryptedData {
+  iv: string;
+  encryptedToken: string;
+}
+
 export interface RefreshToken_ {
-  refreshToken: string;
+  encryptedData: EncryptedData;
 }
 
 // validation
