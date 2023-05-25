@@ -1,10 +1,13 @@
 import { NextFunction } from 'connect';
 import express, { Application, Request, Response } from 'express';
 import { Result, ValidationError, validationResult } from 'express-validator';
+import fs from 'fs';
 import { OAuth2Client } from 'google-auth-library';
 import { GetAccessTokenResponse } from 'google-auth-library/build/src/auth/oauth2client';
 import helmet from 'helmet';
 import nodemailer from 'nodemailer';
+import path from 'path';
+import { decrypt, encrypt } from './helpers/encrypt.helper';
 import {
   CustomError,
   RefreshToken_,
@@ -12,9 +15,6 @@ import {
   handleReqError,
   validateRequest,
 } from './middleware/mail';
-import fs from 'fs';
-import path from 'path';
-import { decrypt, encrypt } from './helpers/encrypt.helper';
 
 const {
   PORT,
@@ -62,35 +62,45 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 
 app.set('view engine', 'html');
 
-app.use('/generate-authcode', (req: Request, res: Response) => {
-  const url = client.generateAuthUrl({
-    access_type: 'offline',
-    prompt: 'consent',
-    scope: [GMAIL_SCOPES!],
-  });
+app.use(
+  '/generate-authcode',
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const url = client.generateAuthUrl({
+        access_type: 'offline',
+        prompt: 'consent',
+        scope: [GMAIL_SCOPES!],
+      });
 
-  res.redirect(url);
-});
-
-app.use('/oauthcallback', async (req: Request, res: Response) => {
-  try {
-    const { code } = req.query;
-    const { tokens } = await client.getToken(code as string);
-    REFRESH_TOKEN = tokens.refresh_token!;
-    const data = JSON.stringify({ encryptedData: encrypt(REFRESH_TOKEN) });
-
-    fs.writeFile(
-      path.join(process.cwd(), 'data', 'token.json'),
-      data,
-      (err) => {
-        if (err) throw err;
-        console.log('Token stored :)');
-      }
-    );
-  } catch (err) {
-    console.log(err);
+      res.redirect(url);
+    } catch (err) {
+      next(err);
+    }
   }
-});
+);
+
+app.use(
+  '/oauthcallback',
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { code } = req.query;
+      const { tokens } = await client.getToken(code as string);
+      REFRESH_TOKEN = tokens.refresh_token!;
+      const data = JSON.stringify({ encryptedData: encrypt(REFRESH_TOKEN) });
+
+      fs.writeFile(
+        path.join(process.cwd(), 'data', 'token.json'),
+        data,
+        (err) => {
+          if (err) throw err;
+          console.log('Token stored :)');
+        }
+      );
+    } catch (err) {
+      next(err);
+    }
+  }
+);
 
 app.post(
   '/mail-api',
@@ -119,7 +129,7 @@ app.post(
         },
       });
 
-      await transport.sendMail({
+       transport.sendMail({
         from: NODEMAIL_GMAIL,
         to: EMAIL,
         subject: 'Message From Your Portfolio',
@@ -134,7 +144,7 @@ app.post(
   }
 );
 
-app.use((error: any, req: Request, res: Response) => {
+app.use((error: Error, req: Request, res: Response) => {
   console.log(error);
   const { message, statusCode = 500, data }: CustomError = error;
 

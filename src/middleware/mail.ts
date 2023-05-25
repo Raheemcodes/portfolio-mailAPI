@@ -41,7 +41,8 @@ export const handeleError = (
 };
 
 export const handleReqError = (errors: Result<ValidationError>) => {
-  return handeleError(errors.array()[0].msg, 422);
+  const [{ msg }] = errors.array();
+  return handeleError(msg, 422);
 };
 
 // HTML Generation
