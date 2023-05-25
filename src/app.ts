@@ -1,12 +1,13 @@
-import { NextFunction } from 'connect';
-import express, { Application, Request, Response } from 'express';
-import { Result, ValidationError, validationResult } from 'express-validator';
 import fs from 'fs';
+import path from 'path';
+
+import express, { Application, Request, Response, NextFunction } from 'express';
+import { Result, ValidationError, validationResult } from 'express-validator';
 import { OAuth2Client } from 'google-auth-library';
 import { GetAccessTokenResponse } from 'google-auth-library/build/src/auth/oauth2client';
 import helmet from 'helmet';
 import nodemailer from 'nodemailer';
-import path from 'path';
+
 import { decrypt, encrypt } from './helpers/encrypt.helper';
 import {
   CustomError,
@@ -129,7 +130,7 @@ app.post(
         },
       });
 
-       transport.sendMail({
+      transport.sendMail({
         from: NODEMAIL_GMAIL,
         to: EMAIL,
         subject: 'Message From Your Portfolio',
