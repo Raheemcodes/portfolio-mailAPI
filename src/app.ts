@@ -130,6 +130,8 @@ app.post(
         },
       });
 
+      res.status(201).send({ message: 'SUCCESS' });
+
       transport.sendMail({
         from: NODEMAIL_GMAIL,
         to: EMAIL,
@@ -137,8 +139,6 @@ app.post(
         generateTextFromHTML: true,
         html: generateHTML(email, name, message),
       });
-
-      res.status(201).send({ message: 'SUCCESS' });
     } catch (err) {
       next(err);
     }
