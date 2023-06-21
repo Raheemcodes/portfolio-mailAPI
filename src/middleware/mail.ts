@@ -29,7 +29,7 @@ export const validateRequest: ValidationChain[] = [
 ];
 
 // Error Handling
-export const handeleError = (
+export const handleError = (
   message: string,
   statusCode?: number,
   data?: string
@@ -42,7 +42,7 @@ export const handeleError = (
 
 export const handleReqError = (errors: Result<ValidationError>) => {
   const [{ msg }] = errors.array();
-  return handeleError(msg, 422);
+  return handleError(msg, 422);
 };
 
 // HTML Generation

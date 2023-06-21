@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 
-import express, { Application, Request, Response, NextFunction } from 'express';
+import express, { Application, NextFunction, Request, Response } from 'express';
 import { Result, ValidationError, validationResult } from 'express-validator';
 import { OAuth2Client } from 'google-auth-library';
 import { GetAccessTokenResponse } from 'google-auth-library/build/src/auth/oauth2client';
@@ -13,6 +13,7 @@ import {
   CustomError,
   RefreshToken_,
   generateHTML,
+  handleError,
   handleReqError,
   validateRequest,
 } from './middleware/mail';
@@ -145,11 +146,43 @@ app.post(
   }
 );
 
-app.use((error: Error, req: Request, res: Response) => {
-  console.log(error);
+app.get('/nftdata', (req: Request, res: Response, next: NextFunction) => {
+  fs.readFile(path.resolve('data', 'nft.json'), (err, data: any) => {
+    if (err) {
+      const error = handleError('ERROR_FETCHING_DATA', 401);
+      return next(error);
+    }
+
+    const parsedData = JSON.parse(data);
+    console.log(parsedData);
+
+    res.status(201).json(parsedData);
+  });
+});
+
+app.get(
+  '/nftdata/:id',
+  async (req: Request, res: Response, next: NextFunction) => {
+    fs.readFile(path.resolve('data', 'nft.json'), (err, data: any) => {
+      if (err) {
+        const error = handleError('ERROR_FETCHING_DATA', 401);
+        return next(error);
+      }
+
+      const { id } = req.params;
+      const parsedData: [] = JSON.parse(data);
+      const token = parsedData.find((token: any) => token._id == id);
+
+      res.status(201).json(token);
+    });
+  }
+);
+
+app.use((error: Error, req: Request, res: Response, next: NextFunction) => {
   const { message, statusCode = 500, data }: CustomError = error;
 
   res.status(statusCode).json({ message, data });
+  console.log(error);
 });
 
 app.listen(PORT || 3000, () => {
