@@ -169,9 +169,9 @@ app.get(
         return next(error);
       }
 
-      const { id } = req.params;
+      const [name, num] = req.params.id.split('_');
       const parsedData: [] = JSON.parse(data);
-      const token = parsedData.find((token: any) => token._id == id);
+      const token = parsedData.find((token: any, idx) => idx + 1 == +num);
 
       res.status(201).json(token);
     });
