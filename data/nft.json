@@ -1,17 +1,58 @@
 [
   {
-    "name": "Space Bear Token",
-    "description": "Introducing the feature of cuteness. A Teady bear Token",
-    "image": "https://www.topaz.so/cdn-cgi/image/width=512,quality=90,fit=scale-down,anim=false,onerror=redirect/https://arweave.net/UwnHIjHGZotNNUZ7zu2rswi9e6JMtsedN-XgcDB7q7w?ext=png",
-    "external_url": "https://raheem-portfolio-api.onrender.com",
+    "name": "Geometry#0",
+    "description": "Geometry is an NFT collection for educational purposes.",
+    "image": "https://ipfs.io/ipfs/QmTJok2tju9zstjtAqESdZxTiUiFCBAyApHiDVj4maV75P/geo_1.png",
     "attributes": [
       {
-        "trait_type": "Artifact",
-        "value": "Teddy Bear"
+        "trait_type": "background",
+        "value": "cyan"
       },
       {
-        "trait_type": "Collection",
-        "value": "Genesis"
+        "trait_type": "color",
+        "value": "red"
+      },
+      {
+        "trait_type": "shape",
+        "value": "circle"
+      }
+    ]
+  },
+  {
+    "name": "Geometry#1",
+    "description": "Geometry is an NFT collection for educational purposes.",
+    "image": "https://ipfs.io/ipfs/QmTJok2tju9zstjtAqESdZxTiUiFCBAyApHiDVj4maV75P/geo_2.png",
+    "attributes": [
+      {
+        "trait_type": "background",
+        "value": "magenta"
+      },
+      {
+        "trait_type": "color",
+        "value": "green"
+      },
+      {
+        "trait_type": "shape",
+        "value": "square"
+      }
+    ]
+  },
+  {
+    "name": "Geometry#2",
+    "description": "Geometry is an NFT collection for educational purposes.",
+    "image": "https://ipfs.io/ipfs/QmTJok2tju9zstjtAqESdZxTiUiFCBAyApHiDVj4maV75P/geo_2.png",
+    "attributes": [
+      {
+        "trait_type": "background",
+        "value": "yellow"
+      },
+      {
+        "trait_type": "color",
+        "value": "blue"
+      },
+      {
+        "trait_type": "shape",
+        "value": "triangle"
       }
     ]
   }
