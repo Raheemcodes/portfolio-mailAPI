@@ -172,7 +172,6 @@ app.get(
       const { id } = req.params;
       const parsedData: [] = JSON.parse(data);
       const token = parsedData[+id];
-      console.log('token:', token);
 
       res.status(201).json(token);
     });
