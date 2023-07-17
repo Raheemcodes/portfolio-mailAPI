@@ -13,7 +13,6 @@ import {
   CustomError,
   RefreshToken_,
   generateHTML,
-  handleError,
   handleReqError,
   validateRequest,
 } from './middleware/mail';
@@ -143,38 +142,6 @@ app.post(
     } catch (err) {
       next(err);
     }
-  }
-);
-
-app.get('/nftdata', (req: Request, res: Response, next: NextFunction) => {
-  fs.readFile(path.resolve('data', 'nft.json'), (err, data: any) => {
-    if (err) {
-      const error = handleError('ERROR_FETCHING_DATA', 401);
-      return next(error);
-    }
-
-    const parsedData = JSON.parse(data);
-    console.log(parsedData);
-
-    res.status(201).json(parsedData);
-  });
-});
-
-app.get(
-  '/nftdata/:id',
-  async (req: Request, res: Response, next: NextFunction) => {
-    fs.readFile(path.resolve('data', 'nft.json'), (err, data: any) => {
-      if (err) {
-        const error = handleError('ERROR_FETCHING_DATA', 401);
-        return next(error);
-      }
-
-      const { id } = req.params;
-      const parsedData: [] = JSON.parse(data);
-      const token = parsedData[+id];
-
-      res.status(201).json(token);
-    });
   }
 );
 
