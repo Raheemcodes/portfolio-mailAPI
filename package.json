@@ -8,21 +8,23 @@
     "serve": "nodemon dist/app.js",
     "dev": "nodemon src/app.ts",
     "build": "tsc -p .",
+    "deploy": "npm run build && 7z a -r porfolio-restAPI.zip dist node_modules package.json package-lock.json tsconfig.json lambda.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Raheem",
   "license": "ISC",
   "dependencies": {
+    "@sendgrid/mail": "^7.7.0",
+    "@vendia/serverless-express": "^4.10.4",
+    "compression": "^1.7.4",
     "express": "^4.18.2",
     "express-validator": "^6.14.2",
-    "google-auth-library": "^8.7.0",
-    "helmet": "^6.0.1",
-    "nodemailer": "^6.8.0"
+    "helmet": "^6.0.1"
   },
   "devDependencies": {
+    "@types/compression": "^1.7.2",
     "@types/express": "^4.17.14",
     "@types/node": "^18.11.11",
-    "@types/nodemailer": "^6.4.6",
     "nodemon": "^2.0.20",
     "ts-node": "^10.9.1",
     "typescript": "^4.9.3"
