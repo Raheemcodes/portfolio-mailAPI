@@ -7,8 +7,8 @@
     "start": "node dist/app.js",
     "serve": "nodemon dist/app.js",
     "dev": "nodemon src/app.ts",
-    "build": "tsc -p .",
-    "deploy": "npm run build && 7z a -r porfolio-restAPI.zip dist node_modules package.json package-lock.json tsconfig.json lambda.js",
+    "build": "tsc -p . && 7z a -r porfolio-restAPI.zip dist node_modules package.json package-lock.json tsconfig.json lambda.js",
+    "deploy": "npm run build && aws lambda update-function-code --function-name porfolio-restAPI --zip-file fileb://porfolio-restAPI.zip",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Raheem",
